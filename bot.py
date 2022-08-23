@@ -1,10 +1,16 @@
-import os, re, requests, threading, html, sys
-import telebot, mysql.connector
+"""
+Moderation bot for comments at knife.media
+"""
+import os
+import re
+import threading
+import html
+import sys
+import requests
+import telebot
+import mysql.connector
 from dotenv import load_dotenv
-
-badwords = [
-    'хуй', 'еба', 'eбе', 'eба', 'ебу', 'еби' 'муда', 'бля', 'пизд'
-]
+from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 load_dotenv()
 
@@ -18,11 +24,12 @@ try:
     )
 
 except mysql.connector.Error as error:
-    print("Mysql connection error: {}".format(error))
+    print("Mysql connection error: " + error.msg)
     sys.exit()
 
 
 bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
+
 
 def get_link(post, id):
     """ Get direct comment link by post id """
@@ -49,11 +56,11 @@ def show_warning(content, id, post):
     """ Show warning to Telegram bot """
 
     buttons = []
-    buttons.append(telebot.types.InlineKeyboardButton("Удалить", None, "remove-" + id))
-    buttons.append(telebot.types.InlineKeyboardButton("Заблокировать", None, "block-" + id))
-    buttons.append(telebot.types.InlineKeyboardButton("Оставить", None, "leave-" + id))
+    buttons.append(InlineKeyboardButton("Удалить", None, "remove-" + id))
+    buttons.append(InlineKeyboardButton("Заблокировать", None, "block-" + id))
+    buttons.append(InlineKeyboardButton("Оставить", None, "leave-" + id))
 
-    markup = telebot.types.InlineKeyboardMarkup()
+    markup = InlineKeyboardMarkup()
     markup.row(*buttons)
 
     text = html.escape(content) + "\n\n" + get_link(post, id)
@@ -71,13 +78,13 @@ def search_links(content):
 def search_hate(content):
     """ Search hate speech in comment """
 
+    badwords = ['хуй', 'еба', 'eбе', 'eба', 'ебу', 'еби' 'муда', 'бля', 'пизд']
+
     return any(word in content for word in badwords)
 
 
 def check_database():
     """ Find unreveiwed comments """
-
-    print('Check')
 
     cursor = db.cursor(dictionary=True)
 
@@ -107,12 +114,9 @@ def check_database():
     scheduler = threading.Timer(120.0, check_database)
     scheduler.start()
 
+
 scheduler = threading.Timer(2.0, check_database)
 scheduler.start()
-
-
-# scheduler.enter(0, 1, check_database, (scheduler,))
-# scheduler.run()
 
 
 def remove_comment(message, id):
@@ -141,7 +145,7 @@ def block_user(message, id):
         cursor.execute("SELECT user_id AS user FROM comments WHERE id = %s", [id])
         result = cursor.fetchone()
 
-        if result == None:
+        if result is None:
             return
 
         user = result["user"]
