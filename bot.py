@@ -83,6 +83,21 @@ def search_hate(content):
     return any(word in content for word in badwords)
 
 
+def moderation_required(content):
+    """ Check if moderation required for this comment """
+
+    if os.getenv('MODERATE_ALL') == 1:
+        return True
+
+    if search_links(content):
+        return True
+
+    if search_hate(content):
+        return True
+
+    return False
+
+
 def check_database():
     """ Find unreveiwed comments """
 
@@ -101,7 +116,7 @@ def check_database():
         for row in result:
             id, post, content = map(str, row.values())
 
-            if search_hate(content) or search_links(content):
+            if moderation_required(content):
                 show_warning(content, id, post)
 
             cursor.execute("INSERT IGNORE INTO watchcat (comment_id) VALUES (%s)", [id])
