@@ -9,8 +9,10 @@ import sys
 import requests
 import telebot
 import mysql.connector
+
 from dotenv import load_dotenv
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup
+from lists.moderation import badwords
 
 load_dotenv()
 
@@ -72,13 +74,11 @@ def show_warning(content, id, post):
 def search_links(content):
     """ Search links in comment content """
 
-    return re.search("https?://", content)
+    return re.search(r"(?:https?://)|(?:@)|(?:[0-9-]{6,})", content)
 
 
 def search_hate(content):
     """ Search hate speech in comment """
-
-    badwords = ['хуй', 'еба', 'eбе', 'eба', 'ебу', 'еби' 'муда', 'бля', 'пизд']
 
     return any(word in content for word in badwords)
 
@@ -99,10 +99,10 @@ def check_database():
         result = cursor.fetchall()
 
         for row in result:
-            id, post, content = row.values()
+            id, post, content = map(str, row.values())
 
             if search_hate(content) or search_links(content):
-                show_warning(content, str(id), str(post))
+                show_warning(content, id, post)
 
             cursor.execute("INSERT IGNORE INTO watchcat (comment_id) VALUES (%s)", [id])
 
