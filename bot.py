@@ -1,7 +1,7 @@
 import os, re, requests, sched, time, html, sys
 import telebot, mysql.connector
 from dotenv import load_dotenv
-from hate import badwords
+from dictionary.hate import badwords
 
 load_dotenv()
 
