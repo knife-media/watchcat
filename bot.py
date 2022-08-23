@@ -1,4 +1,4 @@
-import os, re, requests, sched, time, html, sys
+import os, re, requests, threading, html, sys
 import telebot, mysql.connector
 from dotenv import load_dotenv
 
@@ -23,8 +23,6 @@ except mysql.connector.Error as error:
 
 
 bot = telebot.TeleBot(os.getenv("TELEGRAM_TOKEN"))
-scheduler = sched.scheduler(time.time, time.sleep)
-
 
 def get_link(post, id):
     """ Get direct comment link by post id """
@@ -76,8 +74,10 @@ def search_hate(content):
     return any(word in content for word in badwords)
 
 
-def check_database(rescheduler):
+def check_database():
     """ Find unreveiwed comments """
+
+    print('Check')
 
     cursor = db.cursor(dictionary=True)
 
@@ -104,10 +104,15 @@ def check_database(rescheduler):
     finally:
         cursor.close()
 
-    rescheduler.enter(120, 1, check_database, (rescheduler,))
+    scheduler = threading.Timer(120.0, check_database)
+    scheduler.start()
 
-scheduler.enter(120, 1, check_database, (scheduler,))
-scheduler.run()
+scheduler = threading.Timer(2.0, check_database)
+scheduler.start()
+
+
+# scheduler.enter(0, 1, check_database, (scheduler,))
+# scheduler.run()
 
 
 def remove_comment(message, id):
@@ -158,7 +163,7 @@ def block_user(message, id):
 def hide_buttons(message):
     """ Hide buttons for Telegram message """
 
-    text = html.escape(message.text)
+    text = "<b>Одобрено</b>: " + html.escape(message.text)
     edit_message(message.chat.id, text, message.message_id)
 
 
