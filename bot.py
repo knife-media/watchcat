@@ -1,7 +1,10 @@
 import os, re, requests, sched, time, html, sys
 import telebot, mysql.connector
 from dotenv import load_dotenv
-from dictionary.hate import badwords
+
+badwords = [
+    'хуй', 'еба', 'eбе', 'eба', 'ебу', 'еби' 'муда', 'бля', 'пизд'
+]
 
 load_dotenv()
 
