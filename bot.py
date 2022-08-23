@@ -185,4 +185,9 @@ def bot_handle_calls(call):
         hide_buttons(call.message)
 
 
+@bot.message_handler(commands=['ping'])
+def send_welcome(message):
+    bot.reply_to(message, "Всегда на страже ваших интересов")
+
+
 bot.infinity_polling()
