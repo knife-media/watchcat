@@ -86,7 +86,7 @@ def search_hate(content):
 def moderation_required(content):
     """ Check if moderation required for this comment """
 
-    if os.getenv('MODERATE_ALL') == 1:
+    if os.getenv('MODERATE_ALL'):
         return True
 
     if search_links(content):
